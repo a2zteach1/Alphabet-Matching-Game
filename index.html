@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alphabet Matching Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #start-btn {
+            margin: auto;
+            display: block;
+            text-align: center;
+        }
+
+        #game-container {
+            display: none;
+            background-color: #ffc0cb; /* Pink background */
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .checkbox-option {
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        #game-over {
+            display: none;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #win-message {
+            color: green;
+            font-size: 24px;
+        }
+
+        #loss-message {
+            color: red;
+            font-size: 24px;
+        }
+
+        #developer-info {
+            background-color: #4CAF50;
+            font-weight: bold;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+        }
+
+        h1 {
+            background-color: red;
+            color: white;
+            transition: background-color 1s;
+            padding: 10px;
+        }
+
+        .celebration-message {
+            color: #ffeb3b;
+            font-size: 30px;
+            font-weight: bold;
+            display: none;
+            animation: celebrate 2s infinite;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); color: #ffeb3b; }
+            50% { transform: scale(1.2); color: #ff9800; }
+            100% { transform: scale(1); color: #ffeb3b; }
+        }
+    </style>
+</head>
+<body>
+    <h1 id="game-name">Alphabet Matching Game</h1>
+    
+    <button id="start-btn" class="btn">Start Game</button>
+
+    <div id="game-container">
+        <h2 id="current-letter"></h2>
+        <div id="checkbox-options"></div>
+        <button id="next-btn" class="btn" style="display:none;">Next Letter</button>
+        <p>Question: <span id="question-number">1</span> / 10</p>
+    </div>
+
+    <div id="game-over">
+        <div id="win-message" style="display: none;">Congratulations! You won!</div>
+        <div id="loss-message" style="display: none;">Sorry! You lost! Try again!</div>
+        <p>Your score: <span id="score"></span> / 10</p>
+        <button id="play-again-btn" class="btn">Play Again</button>
+    </div>
+
+    <div id="developer-info">
+        App developed by <strong>Rupak Kushwaha</strong>
+    </div>
+
+    <div id="celebration" class="celebration-message">🎉 You won the game! 🎉</div>
+
+    <!-- Add audio for background music -->
+    <audio id="game-audio" loop>
+        <source src="images/a.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        // Local image URLs for the alphabet letters (ensure you have these images in the local directory)
+        const alphabetImages = {
+            'a': 'images/a.jpg',  // Image for 'A'
+            'b': 'images/b.jpg',  // Image for 'B'
+            'c': 'images/c.jpg',  // Image for 'C'
+            'd': 'images/d.jpg',  // Image for 'D'
+            'e': 'images/e.jpg',  // Image for 'E'
+            'f': 'images/f.jpg',  // Image for 'F'
+            'g': 'images/g.jpg',  // Image for 'G'
+            'h': 'images/h.jpg',  // Image for 'H'
+            'i': 'images/i.jpg',  // Image for 'I'
+            'j': 'images/j.jpg',  // Image for 'J'
+            'k': 'images/k.jpg',  // Image for 'K'
+            'l': 'images/l.jpg',  // Image for 'L'
+            'm': 'images/m.jpg',  // Image for 'M'
+            'n': 'images/n.jpg',  // Image for 'N'
+            'o': 'images/o.jpg',  // Image for 'O'
+            'p': 'images/p.jpg',  // Image for 'P'
+            'q': 'images/q.jpg',  // Image for 'Q'
+            'r': 'images/r.jpg',  // Image for 'R'
+            's': 'images/s.jpg',  // Image for 'S'
+            't': 'images/t.jpg',  // Image for 'T'
+            'u': 'images/u.jpg',  // Image for 'U'
+            'v': 'images/v.jpg',  // Image for 'V'
+            'w': 'images/w.jpg',  // Image for 'W'
+            'x': 'images/x.jpg',  // Image for 'X'
+            'y': 'images/y.jpg',  // Image for 'Y'
+            'z': 'images/z.jpg',  // Image for 'Z'
+        };
+
+        let currentLetter = '';
+        let correctAnswer = '';
+        let questionCount = 0;
+        let correctAnswersCount = 0;
+
+        const startButton = document.getElementById('start-btn');
+        const gameContainer = document.getElementById('game-container');
+        const currentLetterElement = document.getElementById('current-letter');
+        const checkboxOptionsContainer = document.getElementById('checkbox-options');
+        const nextButton = document.getElementById('next-btn');
+        const gameOverContainer = document.getElementById('game-over');
+        const winMessage = document.getElementById('win-message');
+        const lossMessage = document.getElementById('loss-message');
+        const playAgainButton = document.getElementById('play-again-btn');
+        const questionNumberElement = document.getElementById('question-number');
+        const scoreElement = document.getElementById('score');
+        const gameNameElement = document.getElementById('game-name');
+        const celebrationElement = document.getElementById('celebration');
+
+        function getRandomLetter() {
+            const letters = Object.keys(alphabetImages);
+            return letters[Math.floor(Math.random() * letters.length)];
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+        }
+
+        function displayLetterAndOptions() {
+            currentLetter = getRandomLetter();
+            currentLetterElement.innerText = `What is this letter? ${currentLetter.toUpperCase()}`;
+            correctAnswer = alphabetImages[currentLetter];
+
+            const shuffledLetters = [currentLetter, ...getShuffledLetters(currentLetter)];
+            shuffleArray(shuffledLetters); // Shuffle the options
+
+            checkboxOptionsContainer.innerHTML = ''; // Clear previous checkboxes
+
+            shuffledLetters.forEach((letter, index) => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'checkbox-option';
+                checkbox.name = 'letter-option';
+                checkbox.value = letter;
+                checkbox.onclick = () => checkAnswer(checkbox, letter);
+
+                label.appendChild(checkbox);
+                const img = document.createElement('img');
+                img.src = alphabetImages[letter];
+                img.alt = letter;
+                img.style.width = '50px';
+                img.style.height = '50px';
+                label.appendChild(img);
+                checkboxOptionsContainer.appendChild(label);
+                checkboxOptionsContainer.appendChild(document.createElement('br'));
+            });
+        }
+
+        function getShuffledLetters(correctLetter) {
+            const letters = Object.keys(alphabetImages).filter(letter => letter !== correctLetter);
+            const shuffled = [];
+            for (let i = 0; i < 3; i++) {
+                const randomIndex = Math.floor(Math.random() * letters.length);
+                shuffled.push(letters.splice(randomIndex, 1)[0]);
+            }
+            return shuffled;
+        }
+
+        function checkAnswer(checkbox, selectedLetter) {
+            const checkboxes = document.querySelectorAll('.checkbox-option');
+            checkboxes.forEach(box => box.disabled = true); // Disable all checkboxes after selection
+
+            if (selectedLetter === currentLetter) {
+                correctAnswersCount++;
+            }
+
+            questionCount++;
+            questionNumberElement.innerText = questionCount + ' / 10';
+            if (questionCount >= 10) {
+                endGame();
+            } else {
+                nextButton.style.display = 'inline-block';
+            }
+        }
+
+        function nextLetter() {
+            nextButton.style.display = 'none';
+            displayLetterAndOptions();
+            const checkboxes = document.querySelectorAll('.checkbox-option');
+            checkboxes.forEach(box => box.disabled = false); // Enable checkboxes for the next question
+            const selectedCheckboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            selectedCheckboxes.forEach(checkbox => checkbox.checked = false); // Reset checkboxes
+        }
+
+        function startGame() {
+            startButton.style.display = 'none';
+            gameContainer.style.display = 'block';
+            questionCount = 0;
+            correctAnswersCount = 0;
+            questionNumberElement.innerText = '1 / 10';
+            displayLetterAndOptions();
+            gameNameElement.style.backgroundColor = 'red'; // Set the background color of game name to red
+
+            // Play the background music
+            const gameAudio = document.getElementById('game-audio');
+            gameAudio.play();
+        }
+
+        function endGame() {
+            gameContainer.style.display = 'none';
+            gameOverContainer.style.display = 'block';
+            scoreElement.innerText = correctAnswersCount;
+
+            // Show win or loss message
+            if (correctAnswersCount >= 5) {
+                winMessage.style.display = 'block';
+                lossMessage.style.display = 'none';
+                celebrationElement.style.display = 'block'; // Show celebration message
+            } else {
+                lossMessage.style.display = 'block';
+                winMessage.style.display = 'none';
+                celebrationElement.style.display = 'none'; // Hide celebration message
+            }
+
+            // Pause the audio when game ends
+            const gameAudio = document.getElementById('game-audio');
+            gameAudio.pause();
+        }
+
+        function playAgain() {
+            gameOverContainer.style.display = 'none';
+            startButton.style.display = 'block';
+            celebrationElement.style.display = 'none'; // Hide celebration on restart
+            gameNameElement.style.backgroundColor = 'red'; // Keep the background color red
+
+            // Resume playing the audio if the game is restarted
+            const gameAudio = document.getElementById('game-audio');
+            gameAudio.play();
+        }
+
+        startButton.onclick = startGame;
+        nextButton.onclick = nextLetter;
+        playAgainButton.onclick = playAgain;
+    </script>
+</body>
+</html>
